@@ -1,7 +1,6 @@
 obj/Debug/DDM3.pdb
 *.pdb
 bin/Debug/DDM3.vshost.exe
-*.config
 bin/Debug/DDM3.exe
 obj/Debug/DDM3.csproj.FileListAbsolute.txt
 *.exe
