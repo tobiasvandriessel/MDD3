@@ -84,6 +84,89 @@ namespace DDM3
             {
                 game.Run(30.0);
             }
+
+            int n = 8000;
+            int k = 500; //Or 1000
+            int radius = 0; //Or 1, 2, 3, 4, 5 cm;
+
+            int sizeX = 6; //Or 9, 12, 15 m?
+            int sizeY = 6; //Or 4, 3, 2.4 m?
+
+            int startX = 2500 - sizeX;
+            int startY = 2500 - sizeY;
+            int endX = 2500 + sizeX;
+            int endY = 2500 + sizeY;
+
+            Random rand = new Random();
+            double[,] randArray = new double[n,3];
+            double[,] pointCloud = new double[n, 3];
+
+            #region set points not model
+            //For every point not on the model
+            for(int i = 0; i < n - k; i++)
+            {
+                for(int j = 0; j < 3; j++)
+                {
+                    randArray[i, j] = rand.NextDouble();
+
+                    switch (j)
+                    {
+                        case 0:
+                            pointCloud[i, j] = randArray[i, j] * 5000;
+                            break;
+                        case 1:
+                            pointCloud[i, j] = randArray[i, j] * 5000;
+                            break;
+                        case 2:
+                            pointCloud[i, j] = randArray[i, j] * 2000;
+                            break;
+                    } 
+                }
+            }
+            #endregion
+
+            #region set points model
+            //For every point on the model
+            for (int i = n - k; i < n; i++)
+            {
+                for (int j = 0; j < 3; j++)
+                {
+                    randArray[i, j] = rand.NextDouble();
+
+                    switch (j)
+                    {
+                        case 0:
+                            pointCloud[i, j] = randArray[i, j] * (double)sizeX + (double)startX;
+                            break;
+                        case 1:
+                            pointCloud[i, j] = randArray[i, j] * (double)sizeY + (double)startY;
+                            break;
+                        case 2:
+                            pointCloud[i, j] = 1000;
+                            break;
+                    } 
+                }
+            }
+            #endregion
+
+            #region ball
+            double[,] randBall = new double[n - k, 3];
+
+            //Apply the ball to the points on the model.
+            if(radius != 0)
+                for (int i = n - k; i < n; i++)
+                {
+                    for (int j = 0; j < 3; j++)
+                    {
+                        randBall[i, j] = rand.NextDouble() - 0.5*(double)radius;
+
+                        pointCloud[i, j] += randBall[i, j];
+                    }
+                }
+
+            #endregion
+
+
         }
     }
 }
