@@ -86,11 +86,12 @@ namespace DDM3
             if (!Keyboard[OpenTK.Input.Key.Space])
                 angle += rotation_speed * (float)e.Time;
  
-            Matrix4 modelview = Matrix4.LookAt(new Vector3(2500f, 2500f, -7000f), Vector3.UnitZ, Vector3.UnitY); //Vector.Zero
+            //Matrix4 modelview = Matrix4.LookAt(new Vector3(-2500f, 2500f, -7000f), Vector3.UnitZ, Vector3.UnitY); //Vector.Zero
+            Matrix4 modelview = Matrix4.LookAt(new Vector3(2500f, 2500f, -8000f), new Vector3(2500f, 2500f, 0), Vector3.UnitY);
             GL.MatrixMode(MatrixMode.Modelview);
             GL.LoadMatrix(ref modelview);
 
-            GL.Rotate(angle, 0.0f, 1.0f, 0.0f);
+            //GL.Rotate(angle, 0.0f, 1.0f, 0.0f);                   //ROTATE
 
             //GL.Begin(BeginMode.Points);
 
