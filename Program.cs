@@ -20,6 +20,10 @@ namespace DDM3
 {
     class Game : GameWindow
     {
+        static bool klaar = false;
+        static double[,] pointCloud;
+        static int n = 8000;
+
         public Game()
             : base(800, 600, GraphicsMode.Default, "OpenTK Quick Start Sample")
         {
@@ -32,6 +36,8 @@ namespace DDM3
  
             GL.ClearColor(0.1f, 0.2f, 0.5f, 0.0f);
             GL.Enable(EnableCap.DepthTest);
+
+            CreatePointCloud();
         }
  
         protected override void OnResize(EventArgs e)
@@ -59,15 +65,20 @@ namespace DDM3
  
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
  
-            Matrix4 modelview = Matrix4.LookAt(Vector3.Zero, Vector3.UnitZ, Vector3.UnitY);
+            Matrix4 modelview = Matrix4.LookAt(new Vector3(2500f, 2500f, -5000f), Vector3.UnitZ, Vector3.UnitY); //Vector.Zero
             GL.MatrixMode(MatrixMode.Modelview);
             GL.LoadMatrix(ref modelview);
  
-            GL.Begin(BeginMode.Triangles);
- 
-            GL.Color3(1.0f, 1.0f, 0.0f); GL.Vertex3(-1.0f, -1.0f, 4.0f);
-            GL.Color3(1.0f, 0.0f, 0.0f); GL.Vertex3(1.0f, -1.0f, 4.0f);
-            GL.Color3(0.2f, 0.9f, 1.0f); GL.Vertex3(0.0f, 1.0f, 4.0f);
+            GL.Begin(BeginMode.Points);
+
+            if(klaar)
+            {
+                GL.Color3(1.0f, 0.0f, 0.0f);
+                for(int i = 0; i < n; i++)
+                {
+                    GL.Vertex3(pointCloud[i, 0], pointCloud[i, 1], pointCloud[i, 2]); 
+                }
+            }
  
             GL.End();
  
@@ -85,6 +96,16 @@ namespace DDM3
                 game.Run(30.0);
             }
 
+
+
+
+
+
+        }
+
+        static void CreatePointCloud()
+        {
+
             int n = 8000;
             int k = 500; //Or 1000
             //int radius = 0; //Or 1, 2, 3, 4 cm;
@@ -100,7 +121,7 @@ namespace DDM3
 
             Random rand = new Random();
             double[,] randArray = new double[n, 3];
-            double[,] pointCloud = new double[n, 3];
+            pointCloud = new double[n, 3];
 
             //nu weggecomment
             #region main loop 40 diff
@@ -141,80 +162,81 @@ namespace DDM3
                         double endY = 2500 + sizeY;
 
                         #region set points not model
-                            //For every point not on the model
-                            for (int i = 0; i < n - k; i++)
+                        //For every point not on the model
+                        for (int i = 0; i < n - k; i++)
+                        {
+                            for (int j = 0; j < 3; j++)
                             {
-                                for (int j = 0; j < 3; j++)
-                                {
-                                    randArray[i, j] = rand.NextDouble();
+                                randArray[i, j] = rand.NextDouble();
 
-                                    switch (j)
-                                    {
-                                        case 0:
-                                            pointCloud[i, j] = randArray[i, j] * 5000;
-                                            break;
-                                        case 1:
-                                            pointCloud[i, j] = randArray[i, j] * 5000;
-                                            break;
-                                        case 2:
-                                            pointCloud[i, j] = randArray[i, j] * 2000;
-                                            break;
-                                    }
+                                switch (j)
+                                {
+                                    case 0:
+                                        pointCloud[i, j] = randArray[i, j] * 5000;
+                                        break;
+                                    case 1:
+                                        pointCloud[i, j] = randArray[i, j] * 5000;
+                                        break;
+                                    case 2:
+                                        pointCloud[i, j] = randArray[i, j] * 2000;
+                                        break;
                                 }
                             }
-                            #endregion
+                        }
+                        #endregion
 
                         #region set points model
-                            //For every point on the model
+                        //For every point on the model
+                        for (int i = n - k; i < n; i++)
+                        {
+                            for (int j = 0; j < 3; j++)
+                            {
+                                randArray[i, j] = rand.NextDouble();
+
+                                switch (j)
+                                {
+                                    case 0:
+                                        pointCloud[i, j] = randArray[i, j] * (double)sizeX + (double)startX;
+                                        break;
+                                    case 1:
+                                        pointCloud[i, j] = randArray[i, j] * (double)sizeY + (double)startY;
+                                        break;
+                                    case 2:
+                                        pointCloud[i, j] = 1000;
+                                        break;
+                                }
+                            }
+                        }
+                        #endregion
+
+                        #region ball
+
+                        //Apply the ball to the points on the model.
+                        if (radius != 0)
                             for (int i = n - k; i < n; i++)
                             {
                                 for (int j = 0; j < 3; j++)
                                 {
-                                    randArray[i, j] = rand.NextDouble();
 
-                                    switch (j)
-                                    {
-                                        case 0:
-                                            pointCloud[i, j] = randArray[i, j] * (double)sizeX + (double)startX;
-                                            break;
-                                        case 1:
-                                            pointCloud[i, j] = randArray[i, j] * (double)sizeY + (double)startY;
-                                            break;
-                                        case 2:
-                                            pointCloud[i, j] = 1000;
-                                            break;
-                                    }
+                                    pointCloud[i, j] += rand.NextDouble() - 0.5 * (double)radius;
                                 }
                             }
-                            #endregion
 
-                        #region ball
+                        #endregion
 
-                            //Apply the ball to the points on the model.
-                            if (radius != 0)
-                                for (int i = n - k; i < n; i++)
-                                {
-                                    for (int j = 0; j < 3; j++)
-                                    {
+                        //for(int a = 0; a < 100; a++)
+                        //{
 
-                                        pointCloud[i, j] += rand.NextDouble() - 0.5 * (double)radius;
-                                    }
-                                }
+                        //}
 
-                            #endregion
+                        klaar = true;
 
-                        for(int a = 0; a < 100; a++)
-                        {
-                                
-                        }
+                        break;
                     }
                 }
             }
             #endregion
-
-
-
-
         }
+
     }
 }
