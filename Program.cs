@@ -131,7 +131,7 @@ namespace DDM3
                                 break;
                             case 3:
                                 sizeX = 1500;
-                                sizeY = 2400;
+                                sizeY = 240;
                                 break;
                         }
 
@@ -189,7 +189,6 @@ namespace DDM3
                             #endregion
 
                         #region ball
-                            double[,] randBall = new double[n - k, 3];
 
                             //Apply the ball to the points on the model.
                             if (radius != 0)
@@ -197,9 +196,8 @@ namespace DDM3
                                 {
                                     for (int j = 0; j < 3; j++)
                                     {
-                                        randBall[i, j] = rand.NextDouble() - 0.5 * (double)radius;
 
-                                        pointCloud[i, j] += randBall[i, j];
+                                        pointCloud[i, j] += rand.NextDouble() - 0.5 * (double)radius;
                                     }
                                 }
 

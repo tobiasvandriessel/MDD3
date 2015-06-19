@@ -3,7 +3,6 @@ obj/Debug/DDM3.pdb
 bin/Debug/DDM3.vshost.exe
 *.config
 bin/Debug/DDM3.exe
-*.csproj
 obj/Debug/DDM3.csproj.FileListAbsolute.txt
 *.exe
 obj/Debug/DDM3.csprojResolveAssemblyReference.cache
