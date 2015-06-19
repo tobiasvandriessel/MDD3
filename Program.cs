@@ -23,6 +23,11 @@ namespace DDM3
         static bool klaar = false;
         static double[,] pointCloud;
         static int n = 8000;
+        static int vbo_id;
+        static int vbo_size;
+        static Vector3[] vertices;
+        float rotation_speed = 90.0f;
+        float angle;
 
         public Game()
             : base(800, 600, GraphicsMode.Default, "OpenTK Quick Start Sample")
@@ -32,12 +37,24 @@ namespace DDM3
  
         protected override void OnLoad(EventArgs e)
         {
+            GL.Enable(EnableCap.DepthTest); //Added, but not sure what this does.
+
             base.OnLoad(e);
  
-            GL.ClearColor(0.1f, 0.2f, 0.5f, 0.0f);
+            //GL.ClearColor(0.1f, 0.2f, 0.5f, 0.0f);
+            GL.ClearColor(0.0f, 0.0f, 0.0f, 0.0f);
             GL.Enable(EnableCap.DepthTest);
 
             CreatePointCloud();
+
+            GL.GenBuffers(1, out vbo_id);
+            GL.BindBuffer(BufferTarget.ArrayBuffer, vbo_id);
+            GL.BufferData(BufferTarget.ArrayBuffer,
+                          new IntPtr(8000 * BlittableValueType.StrideOf(vertices)),
+                          vertices, BufferUsageHint.StaticDraw);
+
+            klaar = true;
+
         }
  
         protected override void OnResize(EventArgs e)
@@ -46,7 +63,8 @@ namespace DDM3
  
             GL.Viewport(ClientRectangle.X, ClientRectangle.Y, ClientRectangle.Width, ClientRectangle.Height);
  
-            Matrix4 projection = Matrix4.CreatePerspectiveFieldOfView((float)Math.PI / 4, Width / (float)Height, 1.0f, 64.0f);
+            //Matrix4 projection = Matrix4.CreatePerspectiveFieldOfView((float)Math.PI / 4, Width / (float)Height, 1.0f, 64.0f);
+            Matrix4 projection = Matrix4.CreatePerspectiveFieldOfView((float)Math.PI / 4, Width / (float)Height, 1.0f, 12000.0f);
             GL.MatrixMode(MatrixMode.Projection);
             GL.LoadMatrix(ref projection);
         }
@@ -62,25 +80,44 @@ namespace DDM3
         protected override void OnRenderFrame(FrameEventArgs e)
         {
             base.OnRenderFrame(e);
+
+            GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
+
+            if (!Keyboard[OpenTK.Input.Key.Space])
+                angle += rotation_speed * (float)e.Time;
  
-            GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
- 
-            Matrix4 modelview = Matrix4.LookAt(new Vector3(2500f, 2500f, -5000f), Vector3.UnitZ, Vector3.UnitY); //Vector.Zero
+            Matrix4 modelview = Matrix4.LookAt(new Vector3(2500f, 2500f, -7000f), Vector3.UnitZ, Vector3.UnitY); //Vector.Zero
             GL.MatrixMode(MatrixMode.Modelview);
             GL.LoadMatrix(ref modelview);
+
+            GL.Rotate(angle, 0.0f, 1.0f, 0.0f);
+
+            //GL.Begin(BeginMode.Points);
+
+            //if(klaar)
+            //{
+            //    GL.Color3(1.0f, 0.0f, 0.0f);
+            //    for(int i = 0; i < n; i++)
+            //    {
+            //        GL.Vertex3(pointCloud[i, 0], pointCloud[i, 1], pointCloud[i, 2]); 
+            //    }
+            //}
  
-            GL.Begin(BeginMode.Points);
+            //GL.End();
+
+
+            //Vector3 scale = new Vector3(4, 4, 4);
+            //GL.Scale(scale);
 
             if(klaar)
             {
                 GL.Color3(1.0f, 0.0f, 0.0f);
-                for(int i = 0; i < n; i++)
-                {
-                    GL.Vertex3(pointCloud[i, 0], pointCloud[i, 1], pointCloud[i, 2]); 
-                }
+                GL.EnableClientState(ArrayCap.VertexArray);
+                GL.BindBuffer(BufferTarget.ArrayBuffer, vbo_id);
+                GL.VertexPointer(3, VertexPointerType.Float, Vector3.SizeInBytes, new IntPtr(0));
+                //GL.DrawArrays(BeginMode.Points, 0, vbo_size);
+                GL.DrawArrays(PrimitiveType.Points, 0, vbo_size);
             }
- 
-            GL.End();
  
             SwapBuffers();
         }
@@ -95,16 +132,15 @@ namespace DDM3
             {
                 game.Run(30.0);
             }
-
-
-
-
-
-
         }
 
         static void CreatePointCloud()
         {
+
+            vertices = new Vector3[8000];
+            int index = 0;
+            vbo_size = 8000;
+
 
             int n = 8000;
             int k = 500; //Or 1000
@@ -120,7 +156,6 @@ namespace DDM3
             //double endY = 2500 + sizeY;
 
             Random rand = new Random();
-            double[,] randArray = new double[n, 3];
             pointCloud = new double[n, 3];
 
             //nu weggecomment
@@ -165,23 +200,11 @@ namespace DDM3
                         //For every point not on the model
                         for (int i = 0; i < n - k; i++)
                         {
-                            for (int j = 0; j < 3; j++)
-                            {
-                                randArray[i, j] = rand.NextDouble();
+                            //pointCloud[i, 0] = rand.NextDouble() * 5000;
+                            //pointCloud[i, 1] = rand.NextDouble() * 5000;
+                            //pointCloud[i, 2] = rand.NextDouble() * 2000;
 
-                                switch (j)
-                                {
-                                    case 0:
-                                        pointCloud[i, j] = randArray[i, j] * 5000;
-                                        break;
-                                    case 1:
-                                        pointCloud[i, j] = randArray[i, j] * 5000;
-                                        break;
-                                    case 2:
-                                        pointCloud[i, j] = randArray[i, j] * 2000;
-                                        break;
-                                }
-                            }
+                            vertices[i] = new Vector3((float)rand.NextDouble() * 5000, (float)rand.NextDouble() * 5000, (float)rand.NextDouble() * 2000);
                         }
                         #endregion
 
@@ -189,23 +212,11 @@ namespace DDM3
                         //For every point on the model
                         for (int i = n - k; i < n; i++)
                         {
-                            for (int j = 0; j < 3; j++)
-                            {
-                                randArray[i, j] = rand.NextDouble();
+                            //pointCloud[i, 0] = rand.NextDouble() * sizeX + startX;
+                            //pointCloud[i, 1] = rand.NextDouble() * sizeY + startY;
+                            //pointCloud[i, 2] = 1000;
 
-                                switch (j)
-                                {
-                                    case 0:
-                                        pointCloud[i, j] = randArray[i, j] * (double)sizeX + (double)startX;
-                                        break;
-                                    case 1:
-                                        pointCloud[i, j] = randArray[i, j] * (double)sizeY + (double)startY;
-                                        break;
-                                    case 2:
-                                        pointCloud[i, j] = 1000;
-                                        break;
-                                }
-                            }
+                            vertices[i] = new Vector3((float)rand.NextDouble() * (float)sizeX + (float)startX, (float)rand.NextDouble() * (float)sizeY + (float)startY, 1000);
                         }
                         #endregion
 
@@ -215,11 +226,17 @@ namespace DDM3
                         if (radius != 0)
                             for (int i = n - k; i < n; i++)
                             {
-                                for (int j = 0; j < 3; j++)
-                                {
+                                //for (int j = 0; j < 3; j++)
+                                //{
+                                //    pointCloud[i, j] += rand.NextDouble() - 0.5 * (double)radius;
+                                //}
 
-                                    pointCloud[i, j] += rand.NextDouble() - 0.5 * (double)radius;
-                                }
+                                vertices[i].X += (float)rand.NextDouble() - 0.5f * (float)radius;
+                                vertices[i].Y += (float)rand.NextDouble() - 0.5f * (float)radius;
+                                vertices[i].Z += (float)rand.NextDouble() - 0.5f * (float)radius;
+
+                                
+                                
                             }
 
                         #endregion
@@ -229,7 +246,7 @@ namespace DDM3
 
                         //}
 
-                        klaar = true;
+                        //klaar = true;
 
                         break;
                     }
