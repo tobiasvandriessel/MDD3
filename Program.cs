@@ -192,10 +192,10 @@ namespace DDM3
                                 break;
                         }
 
-                        double startX = 2500 - sizeX;
-                        double startY = 2500 - sizeY;
-                        double endX = 2500 + sizeX;
-                        double endY = 2500 + sizeY;
+                        double startX = 2500 - 0.5 * sizeX;
+                        double startY = 2500 - 0.5 * sizeY;
+                        double endX = 2500 + 0.5 * sizeX;
+                        double endY = 2500 + 0.5 * sizeY;
 
                         #region set points not model
                         //For every point not on the model
