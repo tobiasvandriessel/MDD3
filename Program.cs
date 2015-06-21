@@ -27,6 +27,7 @@ namespace DDM3
         static int vbo_size;
         static Vector3[] vertices;
         float rotation_speed = 90.0f;
+        static Random rand = new Random();
         float angle;
 
         public Game()
@@ -64,7 +65,7 @@ namespace DDM3
             GL.Viewport(ClientRectangle.X, ClientRectangle.Y, ClientRectangle.Width, ClientRectangle.Height);
  
             //Matrix4 projection = Matrix4.CreatePerspectiveFieldOfView((float)Math.PI / 4, Width / (float)Height, 1.0f, 64.0f);
-            Matrix4 projection = Matrix4.CreatePerspectiveFieldOfView((float)Math.PI / 4, Width / (float)Height, 1.0f, 12000.0f);
+            Matrix4 projection = Matrix4.CreatePerspectiveFieldOfView((float)Math.PI / 4, Width / (float)Height, 1.0f, 12000000.0f);
             GL.MatrixMode(MatrixMode.Projection);
             GL.LoadMatrix(ref projection);
         }
@@ -87,7 +88,7 @@ namespace DDM3
                 angle += rotation_speed * (float)e.Time;
  
             //Matrix4 modelview = Matrix4.LookAt(new Vector3(-2500f, 2500f, -7000f), Vector3.UnitZ, Vector3.UnitY); //Vector.Zero
-            Matrix4 modelview = Matrix4.LookAt(new Vector3(2500f, 2500f, -8000f), new Vector3(2500f, 2500f, 0), Vector3.UnitY);
+            Matrix4 modelview = Matrix4.LookAt(new Vector3(10000f, 10000f, -8000f), new Vector3(2500f, 2500f, 0), Vector3.UnitY);
             GL.MatrixMode(MatrixMode.Modelview);
             GL.LoadMatrix(ref modelview);
 
@@ -156,7 +157,7 @@ namespace DDM3
             //double endX = 2500 + sizeX;
             //double endY = 2500 + sizeY;
 
-            Random rand = new Random();
+
             pointCloud = new double[n, 3];
 
             //nu weggecomment
@@ -256,5 +257,26 @@ namespace DDM3
             #endregion
         }
 
+        static void Ransac(Vector3[] pointCloud, int d )
+        {
+            int iterations = 0;
+            Vector3 a , b , c;
+            int q = rand.Next( 8000 );
+            a = pointCloud[ q ];
+            q = rand.Next( 8000 );
+            b = pointCloud[ q ];
+            q = rand.Next( 8000 );
+            c = pointCloud[ q ];
+
+            Vector3 f = new Vector3(a[0]-b[0], a[1]-b[1],a[2]-b[2]);
+            Vector3 g = new Vector3(c[0]-b[0], c[1]-b[1],c[2]-b[2]);
+            Vector3 cross = new Vector3(f[1]*g[2]-f[2]*g[1],f[0]*g[2]-f[2]*g[0],f[0]*g[1]-f[1]*g[0]);
+            float det = cross[0]*a[0] + cross[1] *a[1] + cross[2]*a[2];
+            float[ ] plane = new float[ 4 ];
+            plane[ 0 ] = cross[ 0 ];
+            plane[ 1 ] = cross[ 1 ];
+            plane[ 2 ] = cross[ 2 ];
+            plane[ 3 ] = det;
+        }
     }
 }
