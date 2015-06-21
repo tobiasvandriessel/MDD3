@@ -198,6 +198,8 @@ namespace DDM3
                         double endX = 2500 + 0.5 * sizeX;
                         double endY = 2500 + 0.5 * sizeY;
 
+                        klaar = false;
+
                         #region set points not model
                         //For every point not on the model
                         for (int i = 0; i < n - k; i++)
@@ -257,26 +259,57 @@ namespace DDM3
             #endregion
         }
 
-        static void Ransac(Vector3[] pointCloud, int d )
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="pointCloud"></param>
+        /// <param name="d"></param>
+        /// <returns>amount of iterations needed</returns>
+        static int Ransac(Vector3[] pointCloud, int d )
         {
+            bool planeFound = false;
             int iterations = 0;
-            Vector3 a , b , c;
-            int q = rand.Next( 8000 );
-            a = pointCloud[ q ];
-            q = rand.Next( 8000 );
-            b = pointCloud[ q ];
-            q = rand.Next( 8000 );
-            c = pointCloud[ q ];
+            int support = 0;
 
-            Vector3 f = new Vector3(a[0]-b[0], a[1]-b[1],a[2]-b[2]);
-            Vector3 g = new Vector3(c[0]-b[0], c[1]-b[1],c[2]-b[2]);
-            Vector3 cross = new Vector3(f[1]*g[2]-f[2]*g[1],f[0]*g[2]-f[2]*g[0],f[0]*g[1]-f[1]*g[0]);
-            float det = cross[0]*a[0] + cross[1] *a[1] + cross[2]*a[2];
-            float[ ] plane = new float[ 4 ];
-            plane[ 0 ] = cross[ 0 ];
-            plane[ 1 ] = cross[ 1 ];
-            plane[ 2 ] = cross[ 2 ];
-            plane[ 3 ] = det;
+            while (!planeFound)
+            {
+                iterations++;
+
+                Vector3 a, b, c;
+                int q = rand.Next(8000);
+                a = pointCloud[q];
+                int r = rand.Next(8000);
+                b = pointCloud[r];
+                int s = rand.Next(8000);
+                c = pointCloud[s];
+
+                Vector3 f = new Vector3(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
+                Vector3 g = new Vector3(c[0] - b[0], c[1] - b[1], c[2] - b[2]);
+                Vector3 cross = new Vector3(f[1] * g[2] - f[2] * g[1], f[0] * g[2] - f[2] * g[0], f[0] * g[1] - f[1] * g[0]);
+                float det = cross[0] * a[0] + cross[1] * a[1] + cross[2] * a[2];
+                float[] plane = new float[4];
+                plane[0] = cross[0];
+                plane[1] = cross[1];
+                plane[2] = cross[2];
+                plane[3] = det;
+
+                for (int i = 0; i < 8000 - 3; i++)
+                {
+                    if (i == q || i == r || i == s)
+                        break;
+
+                    float distance = Math.Abs(plane[0] * pointCloud[i][0] + plane[1] * pointCloud[i][1] + plane[2] * pointCloud[i][2] + plane[3]) / (float)(Math.Sqrt(plane[0] * plane[0] + plane[1] * plane[1] + plane[2] * plane[2]));
+                    if(Math.Abs(distance) <= 4 )
+                    {
+                        support++;
+                        if(support >= 0.9 * d)
+                            planeFound = true;
+                    }
+                }
+
+            }
+
+            return iterations;
         }
     }
 }
