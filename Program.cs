@@ -26,9 +26,11 @@ namespace DDM3
         static int vbo_id;
         static int vbo_size;
         static Vector3[] vertices;
-        float rotation_speed = 90.0f;
+        static float rotation_speed = 90.0f;
         static Random rand = new Random();
-        float angle;
+        static float angle;
+        static Vector3[] activeVectors;
+        static int[] iterationsNeeded;
 
         public Game()
             : base(800, 600, GraphicsMode.Default, "OpenTK Quick Start Sample")
@@ -46,6 +48,9 @@ namespace DDM3
             GL.ClearColor(0.0f, 0.0f, 0.0f, 0.0f);
             GL.Enable(EnableCap.DepthTest);
 
+            activeVectors = new Vector3[3]; //To store the vectors currently checked
+            iterationsNeeded = new int[40]; //To store the iterations needed by each of the settings
+
             CreatePointCloud();
 
             GL.GenBuffers(1, out vbo_id);
@@ -53,8 +58,6 @@ namespace DDM3
             GL.BufferData(BufferTarget.ArrayBuffer,
                           new IntPtr(8000 * BlittableValueType.StrideOf(vertices)),
                           vertices, BufferUsageHint.StaticDraw);
-
-            klaar = true;
 
         }
  
@@ -119,6 +122,16 @@ namespace DDM3
                 GL.VertexPointer(3, VertexPointerType.Float, Vector3.SizeInBytes, new IntPtr(0));
                 //GL.DrawArrays(BeginMode.Points, 0, vbo_size);
                 GL.DrawArrays(PrimitiveType.Points, 0, vbo_size);
+
+
+                //To draw the active vertices:
+
+                //GL.Begin(PrimitiveType.Triangles);
+                //GL.Color3(0.0f, 0.0f, 1.0f);
+                //GL.Vertex3(activeVectors[0]);
+                //GL.Vertex3(activeVectors[1]);
+                //GL.Vertex3(activeVectors[2]);
+                //GL.End();
             }
  
             SwapBuffers();
@@ -138,7 +151,7 @@ namespace DDM3
 
         static void CreatePointCloud()
         {
-
+            Vector3[] newVertices = new Vector3[8000];
             vertices = new Vector3[8000];
             int index = 0;
             vbo_size = 8000;
@@ -158,7 +171,7 @@ namespace DDM3
             //double endY = 2500 + sizeY;
 
 
-            pointCloud = new double[n, 3];
+            //pointCloud = new double[n, 3];
 
             //nu weggecomment
             #region main loop 40 diff
@@ -171,7 +184,7 @@ namespace DDM3
                 for (int radius = 0; radius < 5; radius++) //This takes care of the radius
                 {
                     //different ratios
-                    for (int ratio = 0; ratio < 4; ratio++)
+                    for (int ratio = 0; ratio < 4; ratio++ )
                     {
                         switch (ratio)
                         {
@@ -198,7 +211,6 @@ namespace DDM3
                         double endX = 2500 + 0.5 * sizeX;
                         double endY = 2500 + 0.5 * sizeY;
 
-                        klaar = false;
 
                         #region set points not model
                         //For every point not on the model
@@ -208,7 +220,7 @@ namespace DDM3
                             //pointCloud[i, 1] = rand.NextDouble() * 5000;
                             //pointCloud[i, 2] = rand.NextDouble() * 2000;
 
-                            vertices[i] = new Vector3((float)rand.NextDouble() * 5000, (float)rand.NextDouble() * 5000, (float)rand.NextDouble() * 2000);
+                            newVertices[i] = new Vector3((float)rand.NextDouble() * 5000, (float)rand.NextDouble() * 5000, (float)rand.NextDouble() * 2000);
                         }
                         #endregion
 
@@ -220,7 +232,7 @@ namespace DDM3
                             //pointCloud[i, 1] = rand.NextDouble() * sizeY + startY;
                             //pointCloud[i, 2] = 1000;
 
-                            vertices[i] = new Vector3((float)rand.NextDouble() * (float)sizeX + (float)startX, (float)rand.NextDouble() * (float)sizeY + (float)startY, 1000);
+                            newVertices[i] = new Vector3((float)rand.NextDouble() * (float)sizeX + (float)startX, (float)rand.NextDouble() * (float)sizeY + (float)startY, 1000);
                         }
                         #endregion
 
@@ -235,24 +247,33 @@ namespace DDM3
                                 //    pointCloud[i, j] += rand.NextDouble() - 0.5 * (double)radius;
                                 //}
 
-                                vertices[i].X += (float)rand.NextDouble() - 0.5f * (float)radius;
-                                vertices[i].Y += (float)rand.NextDouble() - 0.5f * (float)radius;
-                                vertices[i].Z += (float)rand.NextDouble() - 0.5f * (float)radius;
+                                newVertices[i].X += (float)rand.NextDouble() - 0.5f * (float)radius;
+                                newVertices[i].Y += (float)rand.NextDouble() - 0.5f * (float)radius;
+                                newVertices[i].Z += (float)rand.NextDouble() - 0.5f * (float)radius;
 
-                                
-                                
+
+
                             }
 
                         #endregion
+                        if(!klaar)
+                            klaar = true;
+                        vertices = newVertices;
 
-                        //for(int a = 0; a < 100; a++)
-                        //{
+                        int[] iterArray = new int[100];
 
-                        //}
+                        for (int a = 0; a < 100; a++)
+                        {
+                            //iterArray[a] = Ransac(vertices, k); Hij spacete hem nog als we dit uitvoeren
+                        }
 
-                        //klaar = true;
+                        //Sort this array, and check the 95th value (index 94) so we have the # of iterations for which 95% has found the plane.
+                        //Then we put this value r in a table.
 
-                        break;
+                        //System.Threading.Thread.Sleep(500);
+
+
+                        //break; //(Door deze is ratio++ unreachable)
                     }
                 }
             }
@@ -278,10 +299,13 @@ namespace DDM3
                 Vector3 a, b, c;
                 int q = rand.Next(8000);
                 a = pointCloud[q];
+                activeVectors[0] = a;
                 int r = rand.Next(8000);
                 b = pointCloud[r];
+                activeVectors[1] = b;
                 int s = rand.Next(8000);
                 c = pointCloud[s];
+                activeVectors[2] = c;
 
                 Vector3 f = new Vector3(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
                 Vector3 g = new Vector3(c[0] - b[0], c[1] - b[1], c[2] - b[2]);
