@@ -15,6 +15,7 @@ using OpenTK;
 using OpenTK.Graphics;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Input;
+using System.IO;
  
 namespace DDM3
 {
@@ -31,6 +32,7 @@ namespace DDM3
         static float angle;
         static Vector3[] activeVectors;
         static int[] iterationsNeeded;
+        static int kValue;
 
         public Game()
             : base(800, 600, GraphicsMode.Default, "OpenTK Quick Start Sample")
@@ -51,7 +53,7 @@ namespace DDM3
             activeVectors = new Vector3[3]; //To store the vectors currently checked
             iterationsNeeded = new int[40]; //To store the iterations needed by each of the settings
 
-            CreatePointCloud();
+            kValue = CreatePointCloud();
 
             GL.GenBuffers(1, out vbo_id);
             GL.BindBuffer(BufferTarget.ArrayBuffer, vbo_id);
@@ -79,6 +81,9 @@ namespace DDM3
  
             if (Keyboard[Key.Escape])
                 Exit();
+
+            if (Keyboard[OpenTK.Input.Key.Space])
+                Ransac(vertices, kValue);
         }
  
         protected override void OnRenderFrame(FrameEventArgs e)
@@ -87,11 +92,11 @@ namespace DDM3
 
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
 
-            if (!Keyboard[OpenTK.Input.Key.Space])
-                angle += rotation_speed * (float)e.Time;
- 
+            //if (!Keyboard[OpenTK.Input.Key.Space])
+                //angle += rotation_speed * (float)e.Time;
+
             //Matrix4 modelview = Matrix4.LookAt(new Vector3(-2500f, 2500f, -7000f), Vector3.UnitZ, Vector3.UnitY); //Vector.Zero
-            Matrix4 modelview = Matrix4.LookAt(new Vector3(10000f, 10000f, -8000f), new Vector3(2500f, 2500f, 0), Vector3.UnitY);
+            Matrix4 modelview = Matrix4.LookAt(new Vector3(8000f, 8000f, -6000f), new Vector3(2500f, 2500f, 0), Vector3.UnitY);
             GL.MatrixMode(MatrixMode.Modelview);
             GL.LoadMatrix(ref modelview);
 
@@ -126,12 +131,12 @@ namespace DDM3
 
                 //To draw the active vertices:
 
-                //GL.Begin(PrimitiveType.Triangles);
-                //GL.Color3(0.0f, 0.0f, 1.0f);
-                //GL.Vertex3(activeVectors[0]);
-                //GL.Vertex3(activeVectors[1]);
-                //GL.Vertex3(activeVectors[2]);
-                //GL.End();
+                GL.Begin(PrimitiveType.Triangles);
+                GL.Color3(0.0f, 0.0f, 1.0f);
+                GL.Vertex3(activeVectors[0]);
+                GL.Vertex3(activeVectors[1]);
+                GL.Vertex3(activeVectors[2]);
+                GL.End();
             }
  
             SwapBuffers();
@@ -149,8 +154,12 @@ namespace DDM3
             }
         }
 
-        static void CreatePointCloud()
+        static int CreatePointCloud()
         {
+            FileStream fs = new FileStream("Test1.txt", FileMode.Create);
+            StreamWriter sw = new StreamWriter(fs);
+            Console.SetOut(sw);
+
             Vector3[] newVertices = new Vector3[8000];
             vertices = new Vector3[8000];
             int index = 0;
@@ -262,10 +271,15 @@ namespace DDM3
 
                         int[] iterArray = new int[100];
 
+                        Console.WriteLine("k: {0}, radius: {1}, ratio: {2}", kVal, radius, ratio);
                         for (int a = 0; a < 100; a++)
                         {
-                            //iterArray[a] = Ransac(vertices, k); Hij spacete hem nog als we dit uitvoeren
+                            iterArray[a] = Ransac(vertices, k); //Hij spacete hem nog als we dit uitvoeren
+                            Console.WriteLine(iterArray[a]);
                         }
+
+                        
+
 
                         //Sort this array, and check the 95th value (index 94) so we have the # of iterations for which 95% has found the plane.
                         //Then we put this value r in a table.
@@ -278,6 +292,9 @@ namespace DDM3
                 }
             }
             #endregion
+
+            sw.Close();
+            return k;
         }
 
         /// <summary>
@@ -290,10 +307,10 @@ namespace DDM3
         {
             bool planeFound = false;
             int iterations = 0;
-            int support = 0;
 
             while (!planeFound)
             {
+                int support = 0;
                 iterations++;
 
                 Vector3 a, b, c;
@@ -309,7 +326,7 @@ namespace DDM3
 
                 Vector3 f = new Vector3(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
                 Vector3 g = new Vector3(c[0] - b[0], c[1] - b[1], c[2] - b[2]);
-                Vector3 cross = new Vector3(f[1] * g[2] - f[2] * g[1], f[0] * g[2] - f[2] * g[0], f[0] * g[1] - f[1] * g[0]);
+                Vector3 cross = new Vector3((f[1] * g[2]) - (f[2] * g[1]), (f[0] * g[2]) - (f[2] * g[0]), (f[0] * g[1]) - (f[1] * g[0]));
                 float det = cross[0] * a[0] + cross[1] * a[1] + cross[2] * a[2];
                 float[] plane = new float[4];
                 plane[0] = cross[0];
@@ -317,19 +334,33 @@ namespace DDM3
                 plane[2] = cross[2];
                 plane[3] = det;
 
+                float div = (float)(Math.Sqrt(plane[0] * plane[0] + plane[1] * plane[1] + plane[2] * plane[2]));
+
+                //Console.WriteLine("New Combination:");
                 for (int i = 0; i < 8000 - 3; i++)
                 {
                     if (i == q || i == r || i == s)
-                        break;
-
-                    float distance = Math.Abs(plane[0] * pointCloud[i][0] + plane[1] * pointCloud[i][1] + plane[2] * pointCloud[i][2] + plane[3]) / (float)(Math.Sqrt(plane[0] * plane[0] + plane[1] * plane[1] + plane[2] * plane[2]));
+                        continue;
+                    float distance = Math.Abs(plane[0] * pointCloud[i][0] + plane[1] * pointCloud[i][1] + plane[2] * pointCloud[i][2] + plane[3]) / div;
+                    //Console.WriteLine(distance);
                     if(Math.Abs(distance) <= 4 )
                     {
+                        //Console.WriteLine(distance);
                         support++;
-                        if(support >= 0.9 * d)
+                        //if(support>=450)
+                            //Console.WriteLine(support);
+                        if (support >= 0.9 * d)
+                        {
                             planeFound = true;
+                            //Console.WriteLine("Found!");
+                            break;
+                        }
                     }
                 }
+
+                //Console.WriteLine(support);
+
+                System.Threading.Thread.Sleep(50);
 
             }
 
