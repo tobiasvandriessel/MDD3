@@ -360,7 +360,7 @@ namespace DDM3
 
                 //Console.WriteLine(support);
 
-                System.Threading.Thread.Sleep(50);
+                //System.Threading.Thread.Sleep(50);
 
             }
 
