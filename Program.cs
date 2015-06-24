@@ -316,18 +316,21 @@ namespace DDM3
                 Vector3 a, b, c;
                 int q = rand.Next(8000);
                 a = pointCloud[q];
-                activeVectors[0] = a;
+                //activeVectors[0] = a;
                 int r = rand.Next(8000);
                 b = pointCloud[r];
-                activeVectors[1] = b;
+                //activeVectors[1] = b;
                 int s = rand.Next(8000);
                 c = pointCloud[s];
-                activeVectors[2] = c;
+                //activeVectors[2] = c;
+
+                if (q == r || r == s || q == s)
+                    continue;
 
                 Vector3 f = new Vector3(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
                 Vector3 g = new Vector3(c[0] - b[0], c[1] - b[1], c[2] - b[2]);
-                Vector3 cross = new Vector3((f[1] * g[2]) - (f[2] * g[1]), (f[0] * g[2]) - (f[2] * g[0]), (f[0] * g[1]) - (f[1] * g[0]));
-                float det = cross[0] * a[0] + cross[1] * a[1] + cross[2] * a[2];
+                Vector3 cross = new Vector3( ( f[ 1 ] * g[ 2 ] ) - ( f[ 2 ] * g[ 1 ] ) , ( f[ 2 ] * g[ 0 ] ) - ( f[ 0 ] * g[ 2 ] ) , ( f[ 0 ] * g[ 1 ] ) - ( f[ 1 ] * g[ 0 ] ) );
+                float det = -1 * (cross[0] * a[0] + cross[1] * a[1] + cross[2] * a[2]);
                 float[] plane = new float[4];
                 plane[0] = cross[0];
                 plane[1] = cross[1];
@@ -341,7 +344,7 @@ namespace DDM3
                 {
                     if (i == q || i == r || i == s)
                         continue;
-                    float distance = Math.Abs(plane[0] * pointCloud[i][0] + plane[1] * pointCloud[i][1] + plane[2] * pointCloud[i][2] + plane[3]) / div;
+                    float distance = (plane[0] * pointCloud[i][0] + plane[1] * pointCloud[i][1] + plane[2] * pointCloud[i][2] + plane[3]) / div;
                     //Console.WriteLine(distance);
                     if(Math.Abs(distance) <= 4 )
                     {
@@ -358,9 +361,9 @@ namespace DDM3
                     }
                 }
 
-                //Console.WriteLine(support);
-
                 //System.Threading.Thread.Sleep(50);
+                //if(support > 100)
+                //    Console.WriteLine(support);
 
             }
 
