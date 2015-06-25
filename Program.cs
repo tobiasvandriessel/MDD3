@@ -92,15 +92,15 @@ namespace DDM3
 
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
 
-            //if (!Keyboard[OpenTK.Input.Key.Space])
-                //angle += rotation_speed * (float)e.Time;
+            if (!Keyboard[OpenTK.Input.Key.Space])
+                angle += rotation_speed * (float)e.Time;
 
             //Matrix4 modelview = Matrix4.LookAt(new Vector3(-2500f, 2500f, -7000f), Vector3.UnitZ, Vector3.UnitY); //Vector.Zero
-            Matrix4 modelview = Matrix4.LookAt(new Vector3(8000f, 8000f, -6000f), new Vector3(2500f, 2500f, 0), Vector3.UnitY);
+            Matrix4 modelview = Matrix4.LookAt(new Vector3(4000f, 4000f, -2000f), new Vector3(2500f, 2500f, 0), Vector3.UnitY);
             GL.MatrixMode(MatrixMode.Modelview);
             GL.LoadMatrix(ref modelview);
 
-            //GL.Rotate(angle, 0.0f, 1.0f, 0.0f);                   //ROTATE
+            GL.Rotate(angle, 0.0f, 1.0f, 0.0f);                   //ROTATE
 
             //GL.Begin(BeginMode.Points);
 
@@ -156,7 +156,7 @@ namespace DDM3
 
         static int CreatePointCloud()
         {
-            FileStream fs = new FileStream("Test1.txt", FileMode.Create);
+            FileStream fs = new FileStream("Test2.txt", FileMode.Create);
             StreamWriter sw = new StreamWriter(fs);
             Console.SetOut(sw);
 
@@ -192,9 +192,14 @@ namespace DDM3
                 //different radia
                 for (int radius = 0; radius < 5; radius++) //This takes care of the radius
                 {
+                    if (kVal == 0 && radius < 3)
+                        continue;
                     //different ratios
                     for (int ratio = 0; ratio < 4; ratio++ )
                     {
+                        if (kVal == 0 && radius == 3 && ratio == 0)
+                            continue;
+
                         switch (ratio)
                         {
                             case 0:
@@ -256,9 +261,9 @@ namespace DDM3
                                 //    pointCloud[i, j] += rand.NextDouble() - 0.5 * (double)radius;
                                 //}
 
-                                newVertices[i].X += (float)rand.NextDouble() - 0.5f * (float)radius;
-                                newVertices[i].Y += (float)rand.NextDouble() - 0.5f * (float)radius;
-                                newVertices[i].Z += (float)rand.NextDouble() - 0.5f * (float)radius;
+                                newVertices[i].X += 2 * ((float)rand.NextDouble() - 0.5f) * (float)radius;
+                                newVertices[i].Y += 2 * ((float)rand.NextDouble() - 0.5f) * (float)radius;
+                                newVertices[i].Z += 2 * ((float)rand.NextDouble() - 0.5f) * (float)radius;
 
 
 
